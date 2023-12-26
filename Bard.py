@@ -1,10 +1,9 @@
-import argparse
+import streamlit as st
 import json
 import random
 import re
 import string
 import os
-
 import requests
 from prompt_toolkit import prompt
 from prompt_toolkit import PromptSession
@@ -128,8 +127,6 @@ class Chatbot:
             "at": self.SNlM0e,
         }
 
-        print(message)
-
         # do the request!
         resp = self.session.post(
             "https://bard.google.com/_/BardChatUi/data/assistant.lamda.BardFrontendService/StreamGenerate",
@@ -137,8 +134,6 @@ class Chatbot:
             data=data,
             timeout=120,
         )
-
-        print(resp)
 
         chat_data = json.loads(resp.content.splitlines()[3])[0][2]
         if not chat_data:
@@ -159,42 +154,27 @@ class Chatbot:
         return results
 
 
-if __name__ == "__main__":
-    print(
-        """
-        Bard - A command-line interface to Google's Bard (https://bard.google.com/)
-        Repo: github.com/acheong08/Bard
-        Enter `alt+enter` or `esc+enter` to send a message.
-        """,
-    )
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--session",
-        help="__Secure-1PSID cookie.",
-        type=str,
-        required=True,
-    )
-    args = parser.parse_args()
+def main():
+    st.title("Google Bard Chatbot")
 
-    chatbot = Chatbot(args.session)
-    prompt_session = __create_session()
-    completions = __create_completer(["!exit", "!reset"])
-    console = Console()
-    try:
-        while True:
-            console.print("You:")
-            user_prompt = __get_input(session=prompt_session, completer=completions)
-            console.print()
-            if user_prompt == "!exit":
-                break
-            elif user_prompt == "!reset":
-                chatbot.conversation_id = ""
-                chatbot.response_id = ""
-                chatbot.choice_id = ""
-                continue
-            print("Google Bard:")
-            response = chatbot.ask(user_prompt)
-            console.print(Markdown(response["content"]))
-            print()
-    except KeyboardInterrupt:
-        print("Exiting...")
+    st.write(
+        """
+        Bard - A Streamlit app to interact with Google's Bard (https://bard.google.com/)
+        Enter your message in the text area and click on the "Ask Bard" button.
+        """
+    )
+
+    session_id = st.text_input("Enter __Secure-1PSID cookie:", type="password")
+
+    if st.button("Ask Bard"):
+        if session_id:
+            chatbot = Chatbot(session_id)
+            user_prompt = st.text_area("You:")
+            if user_prompt:
+                response = chatbot.ask(user_prompt)
+                st.markdown(Markdown(response["content"]))
+        else:
+            st.warning("Please enter a valid session ID.")
+
+if __name__ == "__main__":
+    main()
