@@ -1,6 +1,3 @@
-"""
-Reverse engineering of Google Bard
-"""
 import argparse
 import json
 import random
